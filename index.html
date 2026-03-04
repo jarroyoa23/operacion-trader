@@ -87,25 +87,64 @@ let stopLoss = 0;
 let operacionActual = 0;
 let iteracion = 1;
 let montoInicialGlobal = 0;
+let bloqueado = false;
+
+function guardarEstado() {
+  const datos = {
+    available,
+    stopLoss,
+    operacionActual,
+    iteracion,
+    montoInicialGlobal,
+    tabla: document.getElementById("tabla").innerHTML,
+    bloqueado,
+    mensajeStop: document.getElementById("mensajeStop").innerText,
+    mensajeTake: document.getElementById("mensajeTake").innerText
+  };
+
+  localStorage.setItem("gestionTrader", JSON.stringify(datos));
+}
+
+function cargarEstado() {
+  let datos = localStorage.getItem("gestionTrader");
+  if (!datos) return;
+
+  datos = JSON.parse(datos);
+
+  available = datos.available;
+  stopLoss = datos.stopLoss;
+  operacionActual = datos.operacionActual;
+  iteracion = datos.iteracion;
+  montoInicialGlobal = datos.montoInicialGlobal;
+  bloqueado = datos.bloqueado;
+
+  document.getElementById("panel").style.display = "block";
+  document.getElementById("tabla").innerHTML = datos.tabla;
+  document.getElementById("mensajeStop").innerText = datos.mensajeStop;
+  document.getElementById("mensajeTake").innerText = datos.mensajeTake;
+
+  if (bloqueado) {
+    document.getElementById("btnOperacion").disabled = true;
+  }
+
+  actualizarPantalla();
+  calcularOperacion();
+}
 
 function iniciar() {
   let monto = parseFloat(document.getElementById("montoInicial").value);
-  if (isNaN(monto) || monto <= 0) {
-    alert("Ingrese un monto válido");
-    return;
-  }
+  if (isNaN(monto) || monto <= 0) return;
 
   montoInicialGlobal = monto;
   stopLoss = monto * 0.75;
   available = monto * 0.25;
+  iteracion = 1;
+  bloqueado = false;
 
   document.getElementById("panel").style.display = "block";
   document.getElementById("btnOperacion").disabled = false;
   document.getElementById("mensajeStop").innerText = "";
   document.getElementById("mensajeTake").innerText = "";
-
-  actualizarPantalla();
-  calcularOperacion();
 
   document.getElementById("tabla").innerHTML = `
   <table>
@@ -118,37 +157,38 @@ function iniciar() {
     </tr>
   </table>
   `;
+
+  actualizarPantalla();
+  calcularOperacion();
+  guardarEstado();
 }
 
 function actualizarPantalla() {
   document.getElementById("stopLoss").innerText = stopLoss.toFixed(2);
   document.getElementById("available").innerText = available.toFixed(2);
-  document.getElementById("capitalTotal").innerText = 
+  document.getElementById("capitalTotal").innerText =
     (available + stopLoss).toFixed(2);
 }
 
 function calcularOperacion() {
   if (available < 10) {
     operacionActual = available;
-    document.getElementById("modo").innerHTML = 
+    document.getElementById("modo").innerHTML =
       "<span class='modo100'>(Modo 100%)</span>";
   } else {
     operacionActual = available * 0.60;
     document.getElementById("modo").innerText = "(60%)";
   }
 
-  document.getElementById("operacion").innerText = 
+  document.getElementById("operacion").innerText =
     operacionActual.toFixed(2);
 }
 
 function ejecutarOperacion() {
-  if (available <= 0) return;
+  if (bloqueado || available <= 0) return;
 
   let profit = parseFloat(document.getElementById("profitInput").value);
-  if (isNaN(profit)) {
-    alert("Ingrese el profit");
-    return;
-  }
+  if (isNaN(profit)) return;
 
   let antes = available;
 
@@ -160,27 +200,26 @@ function ejecutarOperacion() {
 
   if (available <= 0) {
     available = 0;
+    bloqueado = true;
     document.getElementById("mensajeStop").innerText =
-      "🚨 STOP LOSS ALCANZADO - OPERACIONES BLOQUEADAS";
+      "🚨 STOP LOSS ALCANZADO";
     document.getElementById("btnOperacion").disabled = true;
   }
 
-  let capitalTotal = available + stopLoss;
-
-  if (capitalTotal >= montoInicialGlobal * 2) {
+  if (available + stopLoss >= montoInicialGlobal * 2) {
+    bloqueado = true;
     document.getElementById("mensajeTake").innerText =
-      "🎯 TAKE PROFIT ALCANZADO - CAPITAL DUPLICADO";
+      "🎯 TAKE PROFIT ALCANZADO";
     document.getElementById("btnOperacion").disabled = true;
   }
 
   let tabla = document.querySelector("table");
-
   tabla.innerHTML += `
     <tr>
       <td>${iteracion}</td>
       <td>$${antes.toFixed(2)}</td>
       <td>$${operacionActual.toFixed(2)}</td>
-      <td class="${profit > 0 ? 'profit' : 'loss'}">$${profit.toFixed(2)}</td>
+      <td>$${profit.toFixed(2)}</td>
       <td>$${available.toFixed(2)}</td>
     </tr>
   `;
@@ -189,23 +228,16 @@ function ejecutarOperacion() {
   iteracion++;
   actualizarPantalla();
   calcularOperacion();
+  guardarEstado();
 }
 
 function resetear() {
-  available = 0;
-  stopLoss = 0;
-  operacionActual = 0;
-  iteracion = 1;
-  montoInicialGlobal = 0;
-
-  document.getElementById("panel").style.display = "none";
-  document.getElementById("montoInicial").value = "";
-  document.getElementById("profitInput").value = "";
-  document.getElementById("mensajeStop").innerText = "";
-  document.getElementById("mensajeTake").innerText = "";
-  document.getElementById("tabla").innerHTML = "";
+  localStorage.removeItem("gestionTrader");
+  location.reload();
 }
-</script>
 
+window.onload = cargarEstado;
+</script>
+  
 </body>
 </html>
