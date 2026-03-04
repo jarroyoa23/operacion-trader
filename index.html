@@ -205,14 +205,14 @@ function ejecutarOperacion() {
     available = 0;
     bloqueado = true;
     document.getElementById("mensajeStop").innerText =
-      "🚨 STOP LOSS ALCANZADO";
+      "🚨 STOP LOSS ALCANZADO 🚨";
     document.getElementById("btnOperacion").disabled = true;
   }
 
   if (available + stopLoss >= montoInicialGlobal * 2) {
     bloqueado = true;
     document.getElementById("mensajeTake").innerText =
-      "🎯 TAKE PROFIT ALCANZADO";
+      "🎯 PROFIT ALCANZADO";
     document.getElementById("btnOperacion").disabled = true;
   }
 
