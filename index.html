@@ -55,6 +55,9 @@ th {
 
 <button onclick="iniciar()">Iniciar</button>
 <button onclick="resetear()">Reset</button>
+<button onclick="guardarSesion()">Guardar Sesión</button>
+<h3>Historial de Sesiones</h3>
+<div id="historial"></div>
 
 <div id="panel" style="display:none;">
 
@@ -236,6 +239,91 @@ function resetear() {
   location.reload();
 }
 
+// Obtener historial guardado
+function obtenerHistorial() {
+  return JSON.parse(localStorage.getItem("historialTrader")) || [];
+}
+
+// Guardar historial completo
+function guardarHistorial(historial) {
+  localStorage.setItem("historialTrader", JSON.stringify(historial));
+}
+
+// Guardar sesión actual
+function guardarSesion() {
+
+  if (!montoInicialGlobal) return;
+
+  let historial = obtenerHistorial();
+
+  let resultado = "Manual";
+  if (available === 0) resultado = "Stop Loss";
+  if (available + stopLoss >= montoInicialGlobal * 2) resultado = "Take Profit";
+
+  let nuevaSesion = {
+    id: new Date().toLocaleString(),
+    montoInicial: montoInicialGlobal,
+    capitalFinal: available + stopLoss,
+    resultado: resultado,
+    tablaHTML: document.getElementById("tabla").innerHTML
+  };
+
+  historial.unshift(nuevaSesion);
+  guardarHistorial(historial);
+  renderHistorial();
+}
+
+// Mostrar historial
+function renderHistorial() {
+  let historial = obtenerHistorial();
+  let contenedor = document.getElementById("historial");
+
+  if (historial.length === 0) {
+    contenedor.innerHTML = "No hay sesiones guardadas.";
+    return;
+  }
+
+  let html = "";
+
+  historial.forEach((sesion, index) => {
+    html += `
+      <div style="border:1px solid #ccc;padding:10px;margin-bottom:10px;">
+        <strong>${sesion.id}</strong><br>
+        Inicial: $${sesion.montoInicial}<br>
+        Final: $${sesion.capitalFinal.toFixed(2)}<br>
+        Resultado: ${sesion.resultado}<br><br>
+        <button onclick="cargarSesion(${index})">Cargar</button>
+        <button onclick="eliminarSesion(${index})">Eliminar</button>
+      </div>
+    `;
+  });
+
+  contenedor.innerHTML = html;
+}
+
+// Cargar sesión
+function cargarSesion(index) {
+  let historial = obtenerHistorial();
+  let sesion = historial[index];
+
+  document.getElementById("panel").style.display = "block";
+  document.getElementById("tabla").innerHTML = sesion.tablaHTML;
+}
+
+// Eliminar sesión
+function eliminarSesion(index) {
+  let historial = obtenerHistorial();
+  historial.splice(index, 1);
+  guardarHistorial(historial);
+  renderHistorial();
+}
+
+// Mostrar historial al cargar
+window.onload = function() {
+  cargarEstado();
+  renderHistorial();
+};
+  
 window.onload = cargarEstado;
 </script>
   
