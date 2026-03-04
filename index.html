@@ -1,67 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Gestión Profesional</title>
+<style>
+body {
+  font-family: Arial;
+  background: #f4f6f9;
+  padding: 30px;
+}
+.container {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  max-width: 750px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+input, button {
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 16px;
+  width: 100%;
+}
+button:disabled {
+  background-color: #ccc;
+}
+table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+th {
+  background: #f0f0f0;
+}
+.profit { color: green; font-weight: bold; }
+.loss { color: red; font-weight: bold; }
+.stop { color: red; font-weight: bold; }
+.take { color: blue; font-weight: bold; }
+.modo100 { color: orange; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Gestión con Stop & Take Profit</h2>
+
+<label>Monto Inicial:</label>
+<input type="number" id="montoInicial">
+
+<button onclick="iniciar()">Iniciar</button>
+<button onclick="resetear()">Reset</button>
+
+<div id="panel" style="display:none;">
+
+<p><strong>Stop Loss (75% reservado):</strong> $<span id="stopLoss"></span></p>
+<p><strong>Disponible Activo (25%):</strong> $<span id="available"></span></p>
+<p><strong>Capital Total:</strong> $<span id="capitalTotal"></span></p>
+
+<p>
+<strong>Próxima Operación:</strong> 
+$<span id="operacion"></span> 
+<span id="modo"></span>
+</p>
+
+<label>Ingresar Profit (si perdió coloque 0):</label>
+<input type="number" id="profitInput">
+
+<button id="btnOperacion" onclick="ejecutarOperacion()">Registrar Operación</button>
+
+<div id="mensajeStop" class="stop"></div>
+<div id="mensajeTake" class="take"></div>
+
+<div id="tabla"></div>
+
+</div>
+</div>
+
 <script>
 let available = 0;
 let stopLoss = 0;
 let operacionActual = 0;
 let iteracion = 1;
 let montoInicialGlobal = 0;
-let bloqueado = false;
-
-function guardarEstado() {
-  const datos = {
-    available,
-    stopLoss,
-    operacionActual,
-    iteracion,
-    montoInicialGlobal,
-    tabla: document.getElementById("tabla").innerHTML,
-    bloqueado,
-    mensajeStop: document.getElementById("mensajeStop").innerText,
-    mensajeTake: document.getElementById("mensajeTake").innerText
-  };
-
-  localStorage.setItem("gestionTrader", JSON.stringify(datos));
-}
-
-function cargarEstado() {
-  let datos = localStorage.getItem("gestionTrader");
-  if (!datos) return;
-
-  datos = JSON.parse(datos);
-
-  available = datos.available;
-  stopLoss = datos.stopLoss;
-  operacionActual = datos.operacionActual;
-  iteracion = datos.iteracion;
-  montoInicialGlobal = datos.montoInicialGlobal;
-  bloqueado = datos.bloqueado;
-
-  document.getElementById("panel").style.display = "block";
-  document.getElementById("tabla").innerHTML = datos.tabla;
-  document.getElementById("mensajeStop").innerText = datos.mensajeStop;
-  document.getElementById("mensajeTake").innerText = datos.mensajeTake;
-
-  if (bloqueado) {
-    document.getElementById("btnOperacion").disabled = true;
-  }
-
-  actualizarPantalla();
-  calcularOperacion();
-}
 
 function iniciar() {
   let monto = parseFloat(document.getElementById("montoInicial").value);
-  if (isNaN(monto) || monto <= 0) return;
+  if (isNaN(monto) || monto <= 0) {
+    alert("Ingrese un monto válido");
+    return;
+  }
 
   montoInicialGlobal = monto;
   stopLoss = monto * 0.75;
   available = monto * 0.25;
-  iteracion = 1;
-  bloqueado = false;
 
   document.getElementById("panel").style.display = "block";
   document.getElementById("btnOperacion").disabled = false;
   document.getElementById("mensajeStop").innerText = "";
   document.getElementById("mensajeTake").innerText = "";
+
+  actualizarPantalla();
+  calcularOperacion();
 
   document.getElementById("tabla").innerHTML = `
   <table>
@@ -74,38 +118,37 @@ function iniciar() {
     </tr>
   </table>
   `;
-
-  actualizarPantalla();
-  calcularOperacion();
-  guardarEstado();
 }
 
 function actualizarPantalla() {
   document.getElementById("stopLoss").innerText = stopLoss.toFixed(2);
   document.getElementById("available").innerText = available.toFixed(2);
-  document.getElementById("capitalTotal").innerText =
+  document.getElementById("capitalTotal").innerText = 
     (available + stopLoss).toFixed(2);
 }
 
 function calcularOperacion() {
   if (available < 10) {
     operacionActual = available;
-    document.getElementById("modo").innerHTML =
+    document.getElementById("modo").innerHTML = 
       "<span class='modo100'>(Modo 100%)</span>";
   } else {
     operacionActual = available * 0.60;
     document.getElementById("modo").innerText = "(60%)";
   }
 
-  document.getElementById("operacion").innerText =
+  document.getElementById("operacion").innerText = 
     operacionActual.toFixed(2);
 }
 
 function ejecutarOperacion() {
-  if (bloqueado || available <= 0) return;
+  if (available <= 0) return;
 
   let profit = parseFloat(document.getElementById("profitInput").value);
-  if (isNaN(profit)) return;
+  if (isNaN(profit)) {
+    alert("Ingrese el profit");
+    return;
+  }
 
   let antes = available;
 
@@ -117,26 +160,27 @@ function ejecutarOperacion() {
 
   if (available <= 0) {
     available = 0;
-    bloqueado = true;
     document.getElementById("mensajeStop").innerText =
-      "🚨 STOP LOSS ALCANZADO";
+      "🚨 STOP LOSS ALCANZADO - OPERACIONES BLOQUEADAS";
     document.getElementById("btnOperacion").disabled = true;
   }
 
-  if (available + stopLoss >= montoInicialGlobal * 2) {
-    bloqueado = true;
+  let capitalTotal = available + stopLoss;
+
+  if (capitalTotal >= montoInicialGlobal * 2) {
     document.getElementById("mensajeTake").innerText =
-      "🎯 TAKE PROFIT ALCANZADO";
+      "🎯 TAKE PROFIT ALCANZADO - CAPITAL DUPLICADO";
     document.getElementById("btnOperacion").disabled = true;
   }
 
   let tabla = document.querySelector("table");
+
   tabla.innerHTML += `
     <tr>
       <td>${iteracion}</td>
       <td>$${antes.toFixed(2)}</td>
       <td>$${operacionActual.toFixed(2)}</td>
-      <td>$${profit.toFixed(2)}</td>
+      <td class="${profit > 0 ? 'profit' : 'loss'}">$${profit.toFixed(2)}</td>
       <td>$${available.toFixed(2)}</td>
     </tr>
   `;
@@ -145,102 +189,23 @@ function ejecutarOperacion() {
   iteracion++;
   actualizarPantalla();
   calcularOperacion();
-  guardarEstado();
 }
 
 function resetear() {
-  localStorage.removeItem("gestionTrader");
-  location.reload();
+  available = 0;
+  stopLoss = 0;
+  operacionActual = 0;
+  iteracion = 1;
+  montoInicialGlobal = 0;
+
+  document.getElementById("panel").style.display = "none";
+  document.getElementById("montoInicial").value = "";
+  document.getElementById("profitInput").value = "";
+  document.getElementById("mensajeStop").innerText = "";
+  document.getElementById("mensajeTake").innerText = "";
+  document.getElementById("tabla").innerHTML = "";
 }
-
-<button onclick="guardarSesion()">Guardar Sesión</button>
-<h3>Historial de Sesiones</h3>
-<div id="historial"></div>
-
-// Obtener historial guardado
-function obtenerHistorial() {
-  return JSON.parse(localStorage.getItem("historialTrader")) || [];
-}
-
-// Guardar historial completo
-function guardarHistorial(historial) {
-  localStorage.setItem("historialTrader", JSON.stringify(historial));
-}
-
-// Guardar sesión actual
-function guardarSesion() {
-
-  if (!montoInicialGlobal) return;
-
-  let historial = obtenerHistorial();
-
-  let resultado = "Manual";
-  if (available === 0) resultado = "Stop Loss";
-  if (available + stopLoss >= montoInicialGlobal * 2) resultado = "Take Profit";
-
-  let nuevaSesion = {
-    id: new Date().toLocaleString(),
-    montoInicial: montoInicialGlobal,
-    capitalFinal: available + stopLoss,
-    resultado: resultado,
-    tablaHTML: document.getElementById("tabla").innerHTML
-  };
-
-  historial.unshift(nuevaSesion);
-  guardarHistorial(historial);
-  renderHistorial();
-}
-
-// Mostrar historial
-function renderHistorial() {
-  let historial = obtenerHistorial();
-  let contenedor = document.getElementById("historial");
-
-  if (historial.length === 0) {
-    contenedor.innerHTML = "No hay sesiones guardadas.";
-    return;
-  }
-
-  let html = "";
-
-  historial.forEach((sesion, index) => {
-    html += `
-      <div style="border:1px solid #ccc;padding:10px;margin-bottom:10px;">
-        <strong>${sesion.id}</strong><br>
-        Inicial: $${sesion.montoInicial}<br>
-        Final: $${sesion.capitalFinal.toFixed(2)}<br>
-        Resultado: ${sesion.resultado}<br><br>
-        <button onclick="cargarSesion(${index})">Cargar</button>
-        <button onclick="eliminarSesion(${index})">Eliminar</button>
-      </div>
-    `;
-  });
-
-  contenedor.innerHTML = html;
-}
-
-// Cargar sesión
-function cargarSesion(index) {
-  let historial = obtenerHistorial();
-  let sesion = historial[index];
-
-  document.getElementById("panel").style.display = "block";
-  document.getElementById("tabla").innerHTML = sesion.tablaHTML;
-}
-
-// Eliminar sesión
-function eliminarSesion(index) {
-  let historial = obtenerHistorial();
-  historial.splice(index, 1);
-  guardarHistorial(historial);
-  renderHistorial();
-}
-
-// Mostrar historial al cargar
-window.onload = function() {
-  cargarEstado();
-  renderHistorial();
-};
-
-window.onload = cargarEstado;
 </script>
+
+</body>
+</html>
