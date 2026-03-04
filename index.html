@@ -44,6 +44,13 @@ th {
       color: white;
       font-weight: bold;
 }
+  .radio-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;        /* espacio entre radio y texto */
+  margin-right: 10px; /* espacio entre opciones */
+  font-size: 14px;
+}
 .profit { color: green; font-weight: bold; }
 .loss { color: red; font-weight: bold; }
 .stop { color: red; font-weight: bold; }
@@ -54,23 +61,34 @@ th {
 <body>
 
 <div class="container">
-<h2>Registro</h2>
+<h2>Parametros</h2>
 
 <div class="form-group">
   <label>Monto Inicial:</label>
-  <input type="number" id="montoInicial" style="width: 80px">
+  <input type="number" id="montoInicial" style="width: 45px">
 </div>
 <div class="form-group">
 <label><strong>Porcentaje:</strong></label>
-  <input type="radio" name="porcentaje" value="1" checked> 100%
-  <input type="radio" name="porcentaje" value="0.60" checked> 60%
-  <input type="radio" name="porcentaje" value="0.50"> 50%
-  <input type="radio" name="porcentaje" value="0.40"> 40%
-</div> 
 
-<button onclick="iniciar()">Start</button>
-<button onclick="resetear()">Reset</button>
-<button onclick="guardarSesion()">Guardar Sesión</button>
+<label class="radio-inline">
+  <input type="radio" name="porcentaje" value="1" checked> 100%
+</label>
+
+<label class="radio-inline">
+  <input type="radio" name="porcentaje" value="0.60"> 60%
+</label>
+
+<label class="radio-inline">
+  <input type="radio" name="porcentaje" value="0.50"> 50%
+</label>
+
+<label class="radio-inline">
+  <input type="radio" name="porcentaje" value="0.40"> 40%
+</label>
+
+<button style="padding: 4px 8px; onclick="iniciar()">Start</button>
+<button style="padding: 4px 8px;onclick="resetear()">Reset</button>
+<button style="padding: 4px 8px;onclick="guardarSesion()">Guardar Sesión</button>
 <h3>Detalle Operativo</h3>
 <div id="historial"></div>
 
@@ -87,9 +105,9 @@ $<span id="operacion"></span>
 </p>
 
 <label>Ingresar Profit (si perdió coloque 0):</label>
-<input type="number" id="profitInput" style="width: 80px">
+<input type="number" id="profitInput" style="width: 45px">
 
-<button id="btnOperacion" onclick="ejecutarOperacion()">Registrar Operación</button>
+<button id="btnOperacion" style="padding: 4px 8px; onclick="ejecutarOperacion()">Registrar Operación</button>
 
 <div id="mensajeStop" class="stop"></div>
 <div id="mensajeTake" class="take"></div>
