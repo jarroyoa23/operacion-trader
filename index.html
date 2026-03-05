@@ -61,7 +61,7 @@ th {
   display: inline-flex;
   align-items: center;
   gap: 4px;        /* espacio entre radio y texto */
-  margin-right: 10px; /* espacio entre opciones */
+  margin-right: 20px; /* espacio entre opciones */
   font-size: 14px;
 }
 .profit { color: green; font-weight: bold; }
@@ -136,7 +136,6 @@ $<span id="operacion"></span>
 let available = 0;
 let stopLoss = 0;
 let operacionActual = 0;
-let fecha = 0;
 let iteracion = 1;
 let montoInicialGlobal = 0;
 let bloqueado = false;
@@ -292,7 +291,8 @@ function ejecutarOperacion() {
 
   let tabla = document.querySelector("table");
  let claseProfit = profit === 0 ? "profit-cero" : "";
-
+const fecha = obtenerFechaActual();
+  
 tabla.innerHTML += `
   <tr>
     <td>${iteracion}</td>
