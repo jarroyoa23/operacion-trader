@@ -201,6 +201,7 @@ function iniciar() {
   <table>
     <tr>
       <th>#</th>
+      <th>Fecha</th>
       <th>Disponible Antes</th>
       <th>Operación</th>
       <th>Profit</th>
@@ -221,6 +222,12 @@ function actualizarPantalla() {
     (available + stopLoss).toFixed(2);
 }
 
+function obtenerFechaActual() {
+  const ahora = new Date();
+  return ahora.toLocaleDateString() + " " +
+         ahora.toLocaleTimeString();
+}
+  
 function calcularOperacion() {
 
   if (available <= 0) {
@@ -286,6 +293,7 @@ function ejecutarOperacion() {
 tabla.innerHTML += `
   <tr>
     <td>${iteracion}</td>
+    <td>${fecha}</td>
     <td>$${antes.toFixed(2)}</td>
     <td>$${operacionActual.toFixed(2)}</td>
     <td class="${claseProfit}">$${profit.toFixed(2)}</td>
