@@ -136,6 +136,7 @@ $<span id="operacion"></span>
 let available = 0;
 let stopLoss = 0;
 let operacionActual = 0;
+let fecha = 0;
 let iteracion = 1;
 let montoInicialGlobal = 0;
 let bloqueado = false;
@@ -146,6 +147,7 @@ function guardarEstado() {
     stopLoss,
     operacionActual,
     iteracion,
+    fecha, 
     montoInicialGlobal,
     tabla: document.getElementById("tabla").innerHTML,
     bloqueado,
